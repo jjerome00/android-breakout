@@ -18,6 +18,9 @@ package com.faddensoft.breakout;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.SoundPool;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -49,6 +52,7 @@ public class GameActivity extends Activity {
     // discard those either.
     private GameState mGameState;
 
+    private MediaPlayer mMediaPlayer = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,6 +66,16 @@ public class GameActivity extends Activity {
 
         mGameState = new GameState();
         configureGameState();
+
+        // Setup tada sound
+        SoundPool sp = new SoundPool(5, AudioManager.STREAM_MUSIC,0);
+        int soundId = sp.load(this, R.raw.tada, 1);
+        sp.play(soundId, 1, 1, 0, 0, 1);
+
+        if (mMediaPlayer == null) {
+            mMediaPlayer = MediaPlayer.create(this, R.raw.tada); // in 2nd param u have to pass your desire ringtone
+            mGameState.setMediaPlayer(mMediaPlayer);
+        }
 
         // Create a GLSurfaceView, and set it as the Activity's "content view".  This will
         // also create a GLSurfaceView.Renderer, which starts the Renderer thread.
@@ -129,6 +143,11 @@ public class GameActivity extends Activity {
          * in GameSurfaceRenderer's onSurfaceCreated() method.
          */
 
+        if (mMediaPlayer == null) {
+            mMediaPlayer = MediaPlayer.create(this, R.raw.tada); // in 2nd param u have to pass your desire ringtone
+            mGameState.setMediaPlayer(mMediaPlayer);
+        }
+
         Log.d(TAG, "GameActivity resuming");
         super.onResume();
         mGLView.onResume();
@@ -146,7 +165,7 @@ public class GameActivity extends Activity {
                 ballSize = 2.0f;
                 paddleSize = 2.0f;
                 scoreMultiplier = 0.75f;
-                maxLives = 4;
+                maxLives = 1;
                 minSpeed = 200;
                 maxSpeed = 500;
                 break;
@@ -177,6 +196,12 @@ public class GameActivity extends Activity {
             default:
                 throw new RuntimeException("bad difficulty index " + sDifficultyIndex);
         }
+
+        // always win
+        ballSize = 20;
+        maxLives = 1;
+        sNeverLoseBall = true;
+        sSoundEffectsEnabled = true;
 
         mGameState.setBallSizeMultiplier(ballSize);
         mGameState.setPaddleSizeMultiplier(paddleSize);
